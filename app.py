@@ -91,7 +91,7 @@ if uploaded_file:
 
             # --- VISUALIZAÇÃO ---
             
-            st.subheader("📊 Resultado Consolidado")
+            st.subheader("Resultado")
             
             # Métricas Rápidas 
             c1, c2, c3 = st.columns(3)
@@ -133,7 +133,7 @@ if uploaded_file:
             
             with col_g2:
                 # Gráfico de pizza (Agrupando por categoria)
-                st.subheader("🍕 Faturamento por Categoria")
+                st.subheader("Faturamento por Categoria")
                 # Agrupa a original ou a agrupada por categoria para ter o total da fatia
                 fat_cat = df.groupby('categoria')['faturamento'].sum().reset_index()
                 fig2 = px.pie(fat_cat, values='faturamento', names='categoria', hole=0.4,
