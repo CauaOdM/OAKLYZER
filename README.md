@@ -180,8 +180,6 @@ OAKLYZER/
 
 **Cauã Sarraf** ([@CauaOdM](https://github.com/CauaOdM))
 
-Desenvolvido com ☕ e muita paixão por dados!
-
 ---
 
 ## 📜 Licença
@@ -206,6 +204,3 @@ streamlit run app.py
 
 Carregue sua primeira planilha e veja a magia acontecer! 🫐✨
 
----
-
-**"Dados não mentem, números é que falam. E o OAKLYZER traduz tudo isso pra você."** 📊💪
