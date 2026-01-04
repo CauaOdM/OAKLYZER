@@ -56,6 +56,12 @@ O fluxo é bem simples:
 - **Modo Demonstração** → Nomes dos produtos ocultos (para privacidade)
 - **Modo Pago** → Nomes visíveis (desbloqueável via checkbox)
 
+### 📄 Exportar Relatório HTML (somente visualização)
+- Botão "Exportar relatório HTML" aparece após o processamento
+- Gera um HTML estático em tema escuro com métricas, gráficos e tabela
+- Inclui CTA comercial (WhatsApp do Cauã) sem expor número, só o link com mensagem pré-preenchida
+- Relatório é apenas leitura (o cliente não faz upload, só visualiza e interage nos gráficos)
+
 ---
 
 ## 🛠️ Como Usar
@@ -76,6 +82,9 @@ pip install -r requirements.txt
 
 # 3. Inicie a aplicação
 streamlit run app.py
+
+# 4. Após gerar os gráficos
+# Use o botão "Exportar relatório HTML" para baixar o relatório estático em tema escuro (somente visualização)
 ```
 
 ### Sua Planilha Precisa Ter
