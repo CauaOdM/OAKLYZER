@@ -4,8 +4,7 @@ import plotly.express as px
 import plotly.io as pio
 import plotly.graph_objects as go
 from datetime import datetime
-import plotly.io as pio
-from datetime import datetime
+
 
 # Configuração da página
 st.set_page_config(page_title="OAKLYZER", layout="wide")
@@ -283,7 +282,7 @@ if uploaded_file:
 
     <div class=\"panel\">
         <h2>🚀 Vamos escalar juntos</h2>
-        <p>Para acesso completo e decisões rápidas, fale direto comigo (Cauã) no WhatsApp <a href=\"https://wa.me/5512997042612\" style=\"color: var(--accent-2); font-weight: 700; text-decoration: none;\">+55 12 99704-2612</a>. Fechamos negócio rápido e você recebe tudo pronto.</p>
+        <p>Para acesso completo, fale direto comigo <a href=\"https://wa.me/5512997042612?text=Tenho%20interesse%20em%20fechar%20com%20voc%C3%AA!\" style=\"color: var(--accent-2); font-weight: 700; text-decoration: none;\">Cauã</a>. Fechamos negócio rápido e você recebe tudo pronto.</p>
         <p>Oferecemos consultoria baseada nesses dados; se quiser avançar, me chama e alinhamos o próximo passo.</p>
     </div>
 
