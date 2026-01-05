@@ -586,6 +586,20 @@ if uploaded_file:
     </div>
 
     <div class=\"panel\">
+        <h2>🧭 Entenda seus números</h2>
+        <p>Use este guia rápido como um mapa de voo para tomar decisões com confiança:</p>
+        <ul style=\"line-height:1.6; color: var(--muted);\">
+            <li><strong>📊 Ranking de Receita</strong>: mostra quem puxa o faturamento. Os primeiros itens merecem estoque, divulgação e destaque no cardápio.</li>
+            <li><strong>⚠️ Menores Margens</strong>: produtos que vendem, mas deixam pouco. Revise preço, porção ou custo — cada ajuste aqui protege o lucro.</li>
+            <li><strong>ROI &amp; Ponto de Equilíbrio</strong>: ROI indica quanto cada R$1 investido retorna; o ponto de equilíbrio diz quantas unidades precisa vender para empatar. A combinação dos dois revela onde o dinheiro rende mais.</li>
+            <li><strong>Curva de Pareto (ABC)</strong>: Classe A sustenta o caixa, B cresce com atenção, C é opcional. Foque em A para acelerar resultados.</li>
+            <li><strong>Evolução Temporal</strong>: acompanha se você está acelerando ou freando. Oscilações apontam promoções, sazonalidades ou rupturas.</li>
+            <li><strong>Resumo por Produto</strong>: a visão de tudo em um lugar — receita, margem, ROI e equilíbrio para priorizar ações.</li>
+        </ul>
+        <p style=\"color: var(--text); margin-top:10px;\">Você já tem os dados. Agora é decidir onde apertar o acelerador e onde aliviar o peso.</p>
+    </div>
+
+    <div class=\"panel\">
         <h2>🚀 Vamos escalar juntos</h2>
         <p>Para acesso completo, fale direto comigo <a href=\"https://wa.me/5512997042612?text=Tenho%20interesse%20em%20fechar%20com%20voc%C3%AA!\" style=\"color: var(--accent-2); font-weight: 700; text-decoration: none;\">Cauã</a>. Fechamos negócio rápido e você recebe tudo pronto.</p>
         <p>Oferecemos consultoria baseada nesses dados; se quiser avançar, me chama e alinhamos o próximo passo.</p>
