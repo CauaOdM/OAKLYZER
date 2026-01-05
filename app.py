@@ -589,7 +589,7 @@ if uploaded_file:
         <h2>Entenda seus números</h2>
         <p>Use este guia rápido como um mapa de voo para tomar decisões com confiança:</p>
         <ul style=\"line-height:1.6; color: var(--muted);\">
-            <li><strong>Ranking de Receita</strong>: mostra quem puxa o faturamento. Os primeiros itens merecem estoque, divulgação e destaque no cardápio.</li>
+            <li><strong>Ranking de Receita</strong>: mostra quem puxa o faturamento. Os primeiros itens merecem estoque, divulgação e destaque.</li>
             <li><strong>Menores Margens</strong>: produtos que vendem, mas deixam pouco. Revise preço, porção ou custo — cada ajuste aqui protege o lucro.</li>
             <li><strong>ROI &amp; Ponto de Equilíbrio</strong>: ROI indica quanto cada R$1 investido retorna; o ponto de equilíbrio diz quantas unidades precisa vender para empatar. A combinação dos dois revela onde o dinheiro rende mais.</li>
             <li><strong>Curva de Pareto (ABC)</strong>: Classe A sustenta o caixa, B cresce com atenção, C é opcional. Foque em A para acelerar resultados.</li>
