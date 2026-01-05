@@ -116,6 +116,26 @@ if uploaded_file:
                 how='left'
             )
 
+            # --- CÁLCULO DE PONTO DE EQUILÍBRIO E ROI ---
+            if 'custo_unitario' in df_agrupado.columns:
+                # Calcula custo total de cada produto
+                df_agrupado['custo_total'] = df_agrupado['custo_unitario'] * df_agrupado['qtd']
+                
+                # ROI = (Lucro / Investimento) * 100
+                # Onde Investimento = Custo Total
+                df_agrupado['roi'] = ((df_agrupado['lucro'] / df_agrupado['custo_total']) * 100).round(1)
+                
+                # Ponto de Equilíbrio = Custo Total / Margem de Contribuição Unitária
+                # Margem de Contribuição Unitária = Preço - Custo Unitário
+                df_agrupado['margem_contrib_unit'] = df_agrupado['preco_venda'] - df_agrupado['custo_unitario']
+                
+                # Evita divisão por zero
+                df_agrupado['ponto_equilibrio'] = df_agrupado.apply(
+                    lambda row: row['custo_total'] / row['margem_contrib_unit'] if row['margem_contrib_unit'] > 0 else 0,
+                    axis=1
+                ).round(0).astype(int)
+            
+
             # --- VISUALIZAÇÃO ---
             
             st.subheader("Resultado")
@@ -142,6 +162,73 @@ if uploaded_file:
             else:
                 # Se pagou, apenas ordena
                 df_agrupado = df_agrupado.sort_values('faturamento', ascending=False).reset_index(drop=True)
+
+            # --- INDICADORES DE DESEMPENHO (após aplicar máscara de nomes) ---
+            if 'roi' in df_agrupado.columns:
+                st.markdown("---")
+                st.subheader("💎 Indicadores de Desempenho Financeiro")
+
+                col_i1, col_i2 = st.columns(2)
+
+                with col_i1:
+                    # ROI Médio Ponderado
+                    roi_medio = (df_agrupado['lucro'].sum() / df_agrupado['custo_total'].sum() * 100).round(1)
+                    st.metric(
+                        "ROI Médio do Negócio",
+                        f"{roi_medio}%",
+                        help="Retorno sobre Investimento: quanto cada R$ 1 investido retorna de lucro"
+                    )
+                    st.caption("📊 Quanto maior, melhor o retorno do capital investido")
+
+                with col_i2:
+                    # Melhor ROI
+                    melhor_roi = df_agrupado.nlargest(1, 'roi').iloc[0]
+                    st.metric(
+                        "Melhor ROI Individual",
+                        f"{melhor_roi['roi']}%",
+                        help=f"Produto: {melhor_roi['produto']}"
+                    )
+                    st.caption(f"🏆 {melhor_roi['produto']}")
+
+                # --- TABELA DE PONTO DE EQUILÍBRIO ---
+                st.markdown("---")
+                st.subheader("⚖️ Análise de Ponto de Equilíbrio")
+                st.caption("Quantas unidades você precisa vender para não ter prejuízo em cada produto")
+
+                # Seleciona produtos com melhor e pior situação
+                df_equilibrio = df_agrupado[['produto', 'qtd', 'ponto_equilibrio', 'roi']].copy()
+                df_equilibrio['status'] = df_equilibrio.apply(
+                    lambda row: '✅ Acima' if row['qtd'] >= row['ponto_equilibrio'] else '⚠️ Abaixo',
+                    axis=1
+                )
+                df_equilibrio['diferenca'] = df_equilibrio['qtd'] - df_equilibrio['ponto_equilibrio']
+
+                # Ordena por diferença (os mais críticos primeiro)
+                df_equilibrio = df_equilibrio.sort_values('diferenca').reset_index(drop=True)
+
+                # Mostra apenas os 10 mais relevantes (5 piores + 5 melhores)
+                piores = df_equilibrio.head(5)
+                melhores = df_equilibrio.tail(5)
+                df_display = pd.concat([piores, melhores]).drop_duplicates()
+
+                st.dataframe(
+                    df_display.style.format({
+                        'qtd': '{:.0f}',
+                        'ponto_equilibrio': '{:.0f}',
+                        'roi': '{:.1f}%',
+                        'diferenca': '{:+.0f}'
+                    }),
+                    use_container_width=True
+                )
+
+                # Alertas inteligentes
+                produtos_criticos = df_equilibrio[df_equilibrio['status'] == '⚠️ Abaixo']
+                if len(produtos_criticos) > 0:
+                    st.warning(f"⚠️ **Atenção:** {len(produtos_criticos)} produto(s) estão vendendo abaixo do ponto de equilíbrio!")
+                    with st.expander("Ver produtos críticos"):
+                        st.dataframe(produtos_criticos[['produto', 'qtd', 'ponto_equilibrio']])
+                else:
+                    st.success("✅ Todos os produtos estão vendendo acima do ponto de equilíbrio!")
 
             st.markdown("---")
 
@@ -284,14 +371,20 @@ if uploaded_file:
             if 'categoria' in df_agrupado.columns: cols_to_show.insert(1, 'categoria')
             if 'classificacao_abc' in df_agrupado.columns: cols_to_show.append('classificacao_abc')
             if 'margem' in df_agrupado.columns: cols_to_show.extend(['lucro', 'margem'])
+            if 'roi' in df_agrupado.columns: cols_to_show.extend(['roi', 'ponto_equilibrio'])
             
             # Formata os números (R$ e %)
+            formatacao = {
+                'faturamento': 'R$ {:.2f}',
+                'lucro': 'R$ {:.2f}',
+                'margem': '{:.1f}%'
+            }
+            if 'roi' in df_agrupado.columns:
+                formatacao['roi'] = '{:.1f}%'
+                formatacao['ponto_equilibrio'] = '{:.0f} un'
+
             st.dataframe(
-                df_agrupado[cols_to_show].style.format({
-                    'faturamento': 'R$ {:.2f}',
-                    'lucro': 'R$ {:.2f}',
-                    'margem': '{:.1f}%'
-                }),
+                df_agrupado[cols_to_show].style.format(formatacao),
                 use_container_width=True
             )
 
@@ -309,13 +402,83 @@ if uploaded_file:
                 df_html['lucro'] = df_html['lucro'].map(_fmt_brl)
             if 'margem' in df_html.columns:
                 df_html['margem'] = df_html['margem'].map(_fmt_pct)
+            if 'roi' in df_html.columns:
+                df_html['roi'] = df_html['roi'].map(_fmt_pct)
+            if 'ponto_equilibrio' in df_html.columns:
+                df_html['ponto_equilibrio'] = df_html['ponto_equilibrio'].map(lambda v: f"{int(v)} un")
             df_html_table = df_html.to_html(index=False, escape=False)
 
+            # Dados adicionais para o HTML (ROI e ponto de equilíbrio)
+            roi_medio_html = None
+            melhor_roi_val = None
+            melhor_roi_prod = None
+            df_equilibrio_html = "<p><em>ROI/Ponto de equilíbrio não disponível.</em></p>"
+            if 'roi' in df_agrupado.columns and 'ponto_equilibrio' in df_agrupado.columns and df_agrupado['custo_total'].sum() > 0:
+                roi_medio_html = (df_agrupado['lucro'].sum() / df_agrupado['custo_total'].sum() * 100)
+                melhor_row = df_agrupado.nlargest(1, 'roi').iloc[0]
+                melhor_roi_val = melhor_row['roi']
+                melhor_roi_prod = melhor_row['produto']
+
+                df_eq = df_agrupado[['produto', 'qtd', 'ponto_equilibrio', 'roi']].copy()
+                df_eq['status'] = df_eq.apply(lambda row: 'Acima' if row['qtd'] >= row['ponto_equilibrio'] else 'Abaixo', axis=1)
+                df_eq['diferenca'] = df_eq['qtd'] - df_eq['ponto_equilibrio']
+                df_eq = df_eq.sort_values('diferenca')
+                df_eq['qtd'] = df_eq['qtd'].map('{:.0f}'.format)
+                df_eq['ponto_equilibrio'] = df_eq['ponto_equilibrio'].map(lambda v: f"{int(v)} un")
+                df_eq['roi'] = df_eq['roi'].map('{:.1f}%'.format)
+                df_eq['diferenca'] = df_eq['diferenca'].map('{:+.0f}'.format)
+                df_equilibrio_html = df_eq.head(10).to_html(index=False, escape=False)
+
+            roi_medio_display = f"{roi_medio_html:.1f}%" if roi_medio_html is not None else "N/A"
+            melhor_roi_display = f"{melhor_roi_val:.1f}%" if melhor_roi_val is not None else "N/A"
+            melhor_roi_prod_display = melhor_roi_prod if melhor_roi_prod is not None else "—"
+
+            # Exporta todos os gráficos
             fig1_export = go.Figure(fig1) if fig1 is not None else None
             fig2_export = go.Figure(fig2) if fig2 is not None else None
             fig3_export = go.Figure(fig3) if fig3 is not None else None
+            fig_pareto_export = go.Figure(fig_pareto) if 'fig_pareto' in locals() and fig_pareto is not None else None
+            fig_temporal_fat_export = go.Figure(fig_temporal_fat) if 'fig_temporal_fat' in locals() and fig_temporal_fat is not None else None
+            fig_temporal_qtd_export = go.Figure(fig_temporal_qtd) if 'fig_temporal_qtd' in locals() and fig_temporal_qtd is not None else None
 
-            for _fig in [fig1_export, fig2_export, fig3_export]:
+            # Ajuste de altura/margem e alinhamento do eixo Y para rankings
+            for _fig in [fig1_export, fig3_export]:
+                if _fig is not None and _fig.data and hasattr(_fig.data[0], 'y'):
+                    y_vals = list(_fig.data[0].y) if _fig.data[0].y is not None else []
+                    n_bars = len(y_vals) if y_vals else 5
+                    _fig.update_layout(
+                        height=140 + 40 * n_bars,
+                        yaxis=dict(
+                            automargin=True,
+                            tickfont=dict(size=11),
+                            ticklabelposition="outside",
+                            ticks="outside",
+                            categoryorder="array",
+                            categoryarray=y_vals,
+                            title=dict(text="Produtos", font=dict(size=12, color='#cbd5e1'), standoff=24)
+                        ),
+                        margin=dict(l=190, r=40, t=60, b=40)
+                    )
+
+            # Ajuste específico para gráfico de piores margens (fig3_export)
+            if fig3_export is not None and fig3_export.data and hasattr(fig3_export.data[0], 'y'):
+                y_vals = list(fig3_export.data[0].y) if fig3_export.data[0].y is not None else []
+                n_bars = len(y_vals) if y_vals else 5
+                fig3_export.update_layout(
+                    height=140 + 42 * n_bars,
+                    yaxis=dict(
+                        automargin=True,
+                        tickfont=dict(size=12),
+                        ticklabelposition="outside",
+                        ticks="outside",
+                        categoryorder="array",
+                        categoryarray=y_vals,
+                        title=dict(text="Produtos", font=dict(size=12, color='#cbd5e1'), standoff=26)
+                    ),
+                    margin=dict(l=205, r=40, t=60, b=40)
+                )
+
+            for _fig in [fig1_export, fig2_export, fig3_export, fig_pareto_export, fig_temporal_fat_export, fig_temporal_qtd_export]:
                 if _fig is not None:
                     _fig.update_layout(
                         plot_bgcolor='#0f172a',
@@ -326,6 +489,9 @@ if uploaded_file:
             fig1_html = pio.to_html(fig1_export, include_plotlyjs='cdn', full_html=False) if fig1_export is not None else ""
             fig2_html = pio.to_html(fig2_export, include_plotlyjs=False, full_html=False) if fig2_export is not None else ""
             fig3_html = pio.to_html(fig3_export, include_plotlyjs=False, full_html=False) if fig3_export is not None else "<p><em>Margem não disponível.</em></p>"
+            fig_pareto_html = pio.to_html(fig_pareto_export, include_plotlyjs=False, full_html=False) if fig_pareto_export is not None else "<p><em>Pareto não disponível.</em></p>"
+            fig_temporal_fat_html = pio.to_html(fig_temporal_fat_export, include_plotlyjs=False, full_html=False) if fig_temporal_fat_export is not None else "<p><em>Série de faturamento não disponível.</em></p>"
+            fig_temporal_qtd_html = pio.to_html(fig_temporal_qtd_export, include_plotlyjs=False, full_html=False) if fig_temporal_qtd_export is not None else "<p><em>Série de quantidade não disponível.</em></p>"
 
             agora = datetime.now().strftime("%d/%m/%Y %H:%M")
             total_fat = _fmt_brl(df['faturamento'].sum())
@@ -376,6 +542,16 @@ if uploaded_file:
         </div>
     </div>
 
+    <div class="panel">
+        <div class="section-title"><h2>💎 Indicadores Financeiros</h2><div class="badge">ROI &amp; Equilíbrio</div></div>
+        <div class="metrics">
+            <div class="card"><strong>ROI Médio</strong><br><span>{roi_medio_display}</span></div>
+            <div class="card"><strong>Melhor ROI</strong><br><span>{melhor_roi_display}</span><br><small style="color: var(--muted);">{melhor_roi_prod_display}</small></div>
+        </div>
+        <h3 style="margin-top:14px;">⚖️ Ponto de Equilíbrio</h3>
+        {df_equilibrio_html}
+    </div>
+
     <div class=\"panel\">
         <h2>🏆 Ranking de Receita</h2>
         {fig1_html}
@@ -384,6 +560,19 @@ if uploaded_file:
     <div class=\"panel\">
         <h2>Faturamento por Categoria</h2>
         {fig2_html}
+    </div>
+
+    <div class="panel">
+        <h2>📊 Curva de Pareto (ABC)</h2>
+        {fig_pareto_html}
+    </div>
+
+    <div class="panel">
+        <h2>📈 Evolução Temporal</h2>
+        <div class="two-col">
+            {fig_temporal_fat_html}
+            {fig_temporal_qtd_html}
+        </div>
     </div>
 
     <div class=\"panel\">
@@ -418,4 +607,4 @@ if uploaded_file:
     
 else:
     # Mensagem de espera enquanto não tem arquivo
-    st.info("Aguardando upload...")
+    st.info("Aguardando upload...")  
