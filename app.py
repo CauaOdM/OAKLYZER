@@ -41,12 +41,13 @@ if uploaded_file:
         df.columns = colunas_novas
 
         # Tratamento de Data
+        df['data_original'] = None
         if 'data' in df.columns:
             try:
                 # Força ser data
-                df['data'] = pd.to_datetime(df['data'], errors='coerce')
+                df['data_original'] = pd.to_datetime(df['data'], errors='coerce')
                 # Transforma em texto DIA/MÊS/ANO 
-                df['data'] = df['data'].dt.strftime('%d/%m/%Y')
+                df['data'] = df['data_original'].dt.strftime('%d/%m/%Y')
             except:
                 pass 
 
@@ -92,6 +93,28 @@ if uploaded_file:
             # Recalcula a margem correta baseada nos totais (Média Ponderada)
             if 'lucro' in df_agrupado.columns:
                 df_agrupado['margem'] = (df_agrupado['lucro'] / df_agrupado['faturamento']) * 100
+            
+            # --- ANÁLISE ABC (CURVA DE PARETO) ---
+            # Ordena por faturamento decrescente
+            df_abc = df_agrupado.sort_values('faturamento', ascending=False).reset_index(drop=True)
+            
+            # Calcula percentual de cada produto
+            df_abc['percentual_faturamento'] = (df_abc['faturamento'] / df_abc['faturamento'].sum()) * 100
+            
+            # Calcula percentual acumulado
+            df_abc['percentual_acumulado'] = df_abc['percentual_faturamento'].cumsum()
+            
+            # Classifica em A, B ou C
+            df_abc['classificacao_abc'] = df_abc['percentual_acumulado'].apply(
+                lambda x: 'A' if x <= 80 else ('B' if x <= 95 else 'C')
+            )
+            
+            # Adiciona a classificação de volta ao df_agrupado
+            df_agrupado = df_agrupado.merge(
+                df_abc[['produto', 'classificacao_abc']], 
+                on='produto', 
+                how='left'
+            )
 
             # --- VISUALIZAÇÃO ---
             
@@ -124,6 +147,98 @@ if uploaded_file:
 
             fig3 = None  # usado no relatório HTML caso margem exista
 
+            # --- ANALISE TEMPORAL ---
+            if df['data_original'].notna().any():
+                st.markdown("---")
+                st.subheader("Evolução Temporal de Vendas")
+
+                df_temporal = df.groupby('data_original').agg({
+                    'faturamento': 'sum',
+                    'qtd': 'sum'
+                }).reset_index().sort_values('data_original')
+
+                df_temporal = df_temporal[df_temporal['data_original'].notna()]
+
+                if len(df_temporal) > 0:
+                    col_t1, col_t2 = st.columns(2)
+                    with col_t1:
+                        fig_temporal_fat = px.line(df_temporal, x='data_original', y='faturamento',
+                                        title='Faturamento Diário',
+                                        markers=True,
+                                        color_discrete_sequence=['#38bdf8'])
+                        fig_temporal_fat.update_layout(xaxis_title='Data', yaxis_title='Faturamento (R$)')
+                        st.plotly_chart(fig_temporal_fat, use_container_width=True)
+                    
+                    with col_t2:
+                        fig_temporal_qtd = px.line(df_temporal, x='data_original', y='qtd',
+                                       title='Quantidade Vendida Diariamente',
+                                       markers=True,
+                                       color_discrete_sequence=['#f63366'])
+                        fig_temporal_qtd.update_layout(xaxis_title='Data', yaxis_title='Quantidade')
+                        st.plotly_chart(fig_temporal_qtd, use_container_width=True)
+
+
+            # --- GRÁFICO DE PARETO ---
+            st.markdown("---")
+            st.subheader("📊 Análise ABC - Curva de Pareto")
+            st.caption("Identifica os produtos vitais (A), importantes (B) e triviais (C)")
+            
+            # Cria gráfico combinado (barras + linha)
+            fig_pareto = go.Figure()
+            
+            # Adiciona barras de faturamento
+            fig_pareto.add_trace(go.Bar(
+                x=df_abc['produto'].head(15),  # Top 15 para não poluir
+                y=df_abc['faturamento'].head(15),
+                name='Faturamento',
+                marker_color='#0083B8',
+                yaxis='y'
+            ))
+            
+            # Adiciona linha de percentual acumulado
+            fig_pareto.add_trace(go.Scatter(
+                x=df_abc['produto'].head(15),
+                y=df_abc['percentual_acumulado'].head(15),
+                name='% Acumulado',
+                mode='lines+markers',
+                marker=dict(color='#f63366', size=8),
+                line=dict(color='#f63366', width=3),
+                yaxis='y2'
+            ))
+            
+            # Adiciona linhas de referência (80% e 95%)
+            fig_pareto.add_hline(y=80, line_dash="dash", line_color="green", 
+                                annotation_text="80% (Classe A)", yref='y2')
+            fig_pareto.add_hline(y=95, line_dash="dash", line_color="orange", 
+                                annotation_text="95% (Classe B)", yref='y2')
+            
+            # Configura layout com dois eixos Y
+            fig_pareto.update_layout(
+                xaxis=dict(title='Produto'),
+                yaxis=dict(title='Faturamento (R$)', side='left'),
+                yaxis2=dict(title='% Acumulado', side='right', overlaying='y', range=[0, 100]),
+                legend=dict(x=0.7, y=1.1, orientation='h'),
+                hovermode='x unified'
+            )
+            
+            st.plotly_chart(fig_pareto, use_container_width=True)
+            
+            # Mostra resumo da classificação
+            col_abc1, col_abc2, col_abc3 = st.columns(3)
+            
+            qtd_a = len(df_abc[df_abc['classificacao_abc'] == 'A'])
+            qtd_b = len(df_abc[df_abc['classificacao_abc'] == 'B'])
+            qtd_c = len(df_abc[df_abc['classificacao_abc'] == 'C'])
+            
+            with col_abc1:
+                st.metric("🟢 Classe A (Vitais)", f"{qtd_a} produtos", 
+                         help="Representam ~80% do faturamento")
+            with col_abc2:
+                st.metric("🟡 Classe B (Importantes)", f"{qtd_b} produtos",
+                         help="Representam ~15% do faturamento")
+            with col_abc3:
+                st.metric("🔴 Classe C (Triviais)", f"{qtd_c} produtos",
+                         help="Representam ~5% do faturamento")
             # --- GRÁFICOS (USANDO DADOS AGRUPADOS) ---
             col_g1, col_g2 = st.columns(2)
             
@@ -167,6 +282,7 @@ if uploaded_file:
             # Define quais colunas mostrar na tabela final
             cols_to_show = ['produto', 'qtd', 'faturamento']
             if 'categoria' in df_agrupado.columns: cols_to_show.insert(1, 'categoria')
+            if 'classificacao_abc' in df_agrupado.columns: cols_to_show.append('classificacao_abc')
             if 'margem' in df_agrupado.columns: cols_to_show.extend(['lucro', 'margem'])
             
             # Formata os números (R$ e %)
