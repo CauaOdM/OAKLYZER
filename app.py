@@ -543,17 +543,17 @@ if uploaded_file:
     </div>
 
     <div class="panel">
-        <div class="section-title"><h2>💎 Indicadores Financeiros</h2><div class="badge">ROI &amp; Equilíbrio</div></div>
+        <div class="section-title"><h2>Indicadores Financeiros</h2><div class="badge">ROI &amp; Equilíbrio</div></div>
         <div class="metrics">
             <div class="card"><strong>ROI Médio</strong><br><span>{roi_medio_display}</span></div>
             <div class="card"><strong>Melhor ROI</strong><br><span>{melhor_roi_display}</span><br><small style="color: var(--muted);">{melhor_roi_prod_display}</small></div>
         </div>
-        <h3 style="margin-top:14px;">⚖️ Ponto de Equilíbrio</h3>
+        <h3 style="margin-top:14px;">Ponto de Equilíbrio</h3>
         {df_equilibrio_html}
     </div>
 
     <div class=\"panel\">
-        <h2>🏆 Ranking de Receita</h2>
+        <h2>Ranking de Receita</h2>
         {fig1_html}
     </div>
 
@@ -563,12 +563,12 @@ if uploaded_file:
     </div>
 
     <div class="panel">
-        <h2>📊 Curva de Pareto (ABC)</h2>
+        <h2>Curva de Pareto (ABC)</h2>
         {fig_pareto_html}
     </div>
 
     <div class="panel">
-        <h2>📈 Evolução Temporal</h2>
+        <h2>Evolução Temporal</h2>
         <div class="two-col">
             {fig_temporal_fat_html}
             {fig_temporal_qtd_html}
@@ -576,21 +576,21 @@ if uploaded_file:
     </div>
 
     <div class=\"panel\">
-        <h2>⚠️ Menores Margens (%)</h2>
+        <h2>Menores Margens (%)</h2>
         {fig3_html}
     </div>
 
     <div class=\"panel\">
-        <h2>🔎 Resumo por Produto</h2>
+        <h2>Resumo por Produto</h2>
         {df_html_table}
     </div>
 
     <div class=\"panel\">
-        <h2>🧭 Entenda seus números</h2>
+        <h2>Entenda seus números</h2>
         <p>Use este guia rápido como um mapa de voo para tomar decisões com confiança:</p>
         <ul style=\"line-height:1.6; color: var(--muted);\">
-            <li><strong>📊 Ranking de Receita</strong>: mostra quem puxa o faturamento. Os primeiros itens merecem estoque, divulgação e destaque no cardápio.</li>
-            <li><strong>⚠️ Menores Margens</strong>: produtos que vendem, mas deixam pouco. Revise preço, porção ou custo — cada ajuste aqui protege o lucro.</li>
+            <li><strong>Ranking de Receita</strong>: mostra quem puxa o faturamento. Os primeiros itens merecem estoque, divulgação e destaque no cardápio.</li>
+            <li><strong>Menores Margens</strong>: produtos que vendem, mas deixam pouco. Revise preço, porção ou custo — cada ajuste aqui protege o lucro.</li>
             <li><strong>ROI &amp; Ponto de Equilíbrio</strong>: ROI indica quanto cada R$1 investido retorna; o ponto de equilíbrio diz quantas unidades precisa vender para empatar. A combinação dos dois revela onde o dinheiro rende mais.</li>
             <li><strong>Curva de Pareto (ABC)</strong>: Classe A sustenta o caixa, B cresce com atenção, C é opcional. Foque em A para acelerar resultados.</li>
             <li><strong>Evolução Temporal</strong>: acompanha se você está acelerando ou freando. Oscilações apontam promoções, sazonalidades ou rupturas.</li>
