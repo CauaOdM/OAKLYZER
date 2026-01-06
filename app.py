@@ -158,7 +158,7 @@ if uploaded_file:
             
             # --- BARRA LATERAL (CONTROLE) ---
             st.sidebar.header("Painel do Consultor")
-            st.sidebar.subheader("💰 Análise Financeira")
+            st.sidebar.subheader("Análise Financeira")
             
             # --- DETECTAR PERÍODO DOS DADOS ---
             dias_unicos = 1
@@ -200,7 +200,7 @@ if uploaded_file:
                     aviso_periodo = f"(Usando valor integral de 30 dias)"
                     st.sidebar.info("⚠️ Usando custo fixo mensal. O PE pode estar distorcido!")
             
-            st.sidebar.subheader("👤 Controle de Acesso")
+            st.sidebar.subheader("Controle de Acesso")
             modo_pago = st.sidebar.checkbox("🔓 Desbloquear Nomes (Modo Pago)", value=False)
             
             # --- RECALCULA PE GERAL COM custo_fixo DEFINIDO ---
@@ -220,17 +220,17 @@ if uploaded_file:
 
             # --- MÉTRICAS DE PONTO DE EQUILÍBRIO GERAL ---
             st.markdown("---")
-            st.subheader("📊 Análise de Ponto de Equilíbrio Geral")
+            st.subheader("Análise de Ponto de Equilíbrio Geral")
             
             # Mostrar aviso se período foi ajustado
             if aviso_periodo:
-                st.info(f"📅 Período dos dados: **{periodo_dias} dias** {aviso_periodo}")
+                st.info(f"Período dos dados: **{periodo_dias} dias** {aviso_periodo}")
             
             col_pe1, col_pe2, col_pe3 = st.columns(3)
             
             with col_pe1:
                 st.metric(
-                    "🎯 Ticket Médio",
+                    "Ticket Médio",
                     f"R$ {ticket_medio:,.2f}",
                     help="Faturamento total ÷ Quantidade vendida"
                 )
@@ -238,13 +238,13 @@ if uploaded_file:
             with col_pe2:
                 if pe_geral_unidades > 0:
                     st.metric(
-                        "⚖️ PE Geral (Unidades)",
+                        "PE Geral (Unidades)",
                         f"{pe_geral_unidades:.0f} un",
                         help="Quantidade necessária pra cobrir custos fixos"
                     )
                 else:
                     st.metric(
-                        "⚖️ PE Geral (Unidades)",
+                        "PE Geral (Unidades)",
                         "—",
                         help="Informe custo fixo para calcular"
                     )
@@ -252,14 +252,14 @@ if uploaded_file:
             with col_pe3:
                 if custo_fixo > 0 and margem_contrib_media_ponderada > 0:
                     st.metric(
-                        "📈 Distância do PE",
+                        "Distância do PE",
                         f"{percentual_pe:+.1f}%",
                         delta=f"{diferenca_unidades:+.0f} un",
                         help="+ = acima (seguro) | - = abaixo (risco)"
                     )
                 else:
                     st.metric(
-                        "📈 Distância do PE",
+                        "Distância do PE",
                         "—",
                         help="Informe custo fixo para calcular"
                     )
@@ -274,9 +274,9 @@ if uploaded_file:
                     st.success(f"✅ Você está {percentual_pe:.1f}% acima do PE. Situação confortável!")
             else:
                 if custo_fixo == 0:
-                    st.info("💡 Preencha o custo fixo na barra lateral para calcular o ponto de equilíbrio.")
+                    st.info("Preencha o custo fixo na barra lateral para calcular o ponto de equilíbrio.")
                 if 'custo_unitario' not in df.columns:
-                    st.info("💡 Adicione custo unitário na planilha para análise completa.")
+                    st.info("Adicione custo unitário na planilha para análise completa.")
 
             # --- MÁSCARA DE NOMES ---
             if not modo_pago:
@@ -292,7 +292,7 @@ if uploaded_file:
             # --- INDICADORES DE DESEMPENHO (após aplicar máscara de nomes) ---
             if 'roi' in df_agrupado.columns:
                 st.markdown("---")
-                st.subheader("💎 Indicadores de Desempenho Financeiro")
+                st.subheader("Indicadores de Desempenho Financeiro")
 
                 col_i1, col_i2 = st.columns(2)
 
@@ -304,7 +304,7 @@ if uploaded_file:
                         f"{roi_medio}%",
                         help="Retorno sobre Investimento: quanto cada R$ 1 investido retorna de lucro"
                     )
-                    st.caption("📊 Quanto maior, melhor o retorno do capital investido")
+                    st.caption("Quanto maior, melhor o retorno do capital investido")
 
                 with col_i2:
                     # Melhor ROI
@@ -318,7 +318,7 @@ if uploaded_file:
 
                 # --- TABELA DE PONTO DE EQUILÍBRIO ---
                 st.markdown("---")
-                st.subheader("⚖️ Análise de Ponto de Equilíbrio")
+                st.subheader("Análise de Ponto de Equilíbrio")
                 st.caption("Quantas unidades você precisa vender para não ter prejuízo em cada produto")
 
                 # Seleciona produtos com melhor e pior situação
@@ -393,7 +393,7 @@ if uploaded_file:
 
             # --- GRÁFICO DE PARETO ---
             st.markdown("---")
-            st.subheader("📊 Análise ABC - Curva de Pareto")
+            st.subheader("Análise ABC - Curva de Pareto")
             st.caption("Identifica os produtos vitais (A), importantes (B) e triviais (C)")
             
             # Cria gráfico combinado (barras + linha)
@@ -456,7 +456,7 @@ if uploaded_file:
             col_g1, col_g2 = st.columns(2)
             
             with col_g1:
-                st.subheader("🏆 Ranking de Receita")
+                st.subheader("Ranking de Receita")
                 # Pega os 7 maiores
                 top_fat = df_agrupado.head(7)
                 fig1 = px.bar(top_fat, x='faturamento', y='produto', orientation='h', 
@@ -490,7 +490,7 @@ if uploaded_file:
                 st.plotly_chart(fig3, use_container_width=True)
 
             # --- TABELA FINAL (RESUMO) ---
-            st.markdown("### 🔎 Resumo por Produto")
+            st.markdown("### Resumo por Produto")
             
             # Define quais colunas mostrar na tabela final
             cols_to_show = ['produto', 'qtd', 'faturamento']
