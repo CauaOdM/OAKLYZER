@@ -18,9 +18,13 @@ O **OAKLYZER** ajuda gestores a sair do “achismo” e decidir rápido: padroni
 ## ✨ Entregas principais
 
 - **Métricas rápidas**: faturamento total, vendas e lucro (quando há custo).
+- **Ticket Médio**: faturamento total ÷ quantidade vendida.
 - **Ranking TOP 7**: produtos que puxam o caixa, já ordenados.
 - **Faturamento por categoria**: pizza interativa para ver o mix.
 - **Curva ABC/Pareto**: classifica A/B/C, mostra % acumulado e linhas de corte 80/95.
+- **Ponto de Equilíbrio Geral**: calcula quantas unidades precisa vender para cobrir custos fixos.
+  - ⭐ **Smart Period Detection**: detecta automaticamente se dados são de período < 30 dias
+  - ⭐ **Custo Proporcional**: oferece ajustar o custo fixo proporcionalmente ao período
 - **Menores margens**: alerta visual dos 5 piores itens.
 - **Evolução temporal**: linhas para faturamento e quantidade por data.
 - **ROI e ponto de equilíbrio**: ROI médio, melhor ROI e tabela com status (acima/abaixo do break-even).
@@ -83,7 +87,19 @@ Após processar os dados, use o botão **“Exportar relatório HTML (somente vi
 - **Margem %** = LUCRO / FATURAMENTO × 100
 - **ROI %** = LUCRO / CUSTO_TOTAL × 100
 - **Ponto de equilíbrio** = CUSTO_TOTAL / (PREÇO_VENDA − CUSTO_UNITÁRIO)
+- **Ponto de Equilíbrio Geral** = CUSTO_FIXO / MARGEM_CONTRIB_MÉDIA_PONDERADA
 - **Curva ABC**: A (até 80%), B (até 95%), C (restante) por faturamento acumulado.
+
+### ⭐ Smart Period Detection (Novo!)
+
+Se sua planilha tem dados de um período **menor que 30 dias**, o OAKLYZER detecta automaticamente e oferece:
+
+1. **Aviso inteligente** na sidebar mostrando quantos dias de dados você tem
+2. **Checkbox de ajuste proporcional**: calcula o custo fixo para o período exato
+   - Exemplo: dados de 14 dias + custo fixo R$ 3.000/mês → ajusta para R$ 1.400
+3. **Exibição clara** do período e qual valor foi usado no PE
+
+Isso garante que o **Ponto de Equilíbrio não fique distorcido** quando você não tem dados de um mês completo!
 
 ---
 
