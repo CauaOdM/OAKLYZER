@@ -159,6 +159,17 @@ if uploaded_file:
             # --- BARRA LATERAL (CONTROLE) ---
             st.sidebar.header("Painel do Consultor")
             st.sidebar.subheader("💰 Análise Financeira")
+            
+            # --- DETECTAR PERÍODO DOS DADOS ---
+            dias_unicos = 1
+            periodo_dias = 1
+            if 'data_original' in df.columns and df['data_original'].notna().any():
+                data_min = df['data_original'].min()
+                data_max = df['data_original'].max()
+                periodo_dias = (data_max - data_min).days + 1
+                dias_unicos = df['data_original'].nunique()
+            
+            # Input do custo fixo
             custo_fixo = st.sidebar.number_input(
                 "Custo Fixo Total (R$)",
                 value=0.0,
@@ -167,12 +178,34 @@ if uploaded_file:
                 help="Aluguel, taxas, serviços, contas fixas (SEM custo dos produtos)"
             )
             
+            # --- VERIFICAR SE PERÍODO É MENOR QUE 30 DIAS ---
+            custo_fixo_ajustado = custo_fixo
+            aviso_periodo = ""
+            
+            if periodo_dias < 30 and custo_fixo > 0:
+                st.sidebar.warning(f"⚠️ Seus dados cobrem apenas **{periodo_dias} dias**")
+                
+                # Oferecer cálculo proporcional
+                ajustar_custo = st.sidebar.checkbox(
+                    "📊 Ajustar custo fixo proporcionalmente?",
+                    value=True,
+                    help="Calcula o custo fixo para o período informado"
+                )
+                
+                if ajustar_custo:
+                    custo_fixo_ajustado = (custo_fixo / 30) * periodo_dias
+                    aviso_periodo = f"(Ajustado para {periodo_dias} dias: R$ {custo_fixo_ajustado:,.2f})"
+                    st.sidebar.info(f"Custo fixo ajustado: R$ {custo_fixo_ajustado:,.2f}")
+                else:
+                    aviso_periodo = f"(Usando valor integral de 30 dias)"
+                    st.sidebar.info("⚠️ Usando custo fixo mensal. O PE pode estar distorcido!")
+            
             st.sidebar.subheader("👤 Controle de Acesso")
             modo_pago = st.sidebar.checkbox("🔓 Desbloquear Nomes (Modo Pago)", value=False)
             
             # --- RECALCULA PE GERAL COM custo_fixo DEFINIDO ---
-            if margem_contrib_media_ponderada > 0 and custo_fixo > 0:
-                pe_geral_unidades = custo_fixo / margem_contrib_media_ponderada
+            if margem_contrib_media_ponderada > 0 and custo_fixo_ajustado > 0:
+                pe_geral_unidades = custo_fixo_ajustado / margem_contrib_media_ponderada
                 qtd_total_vendida = df_agrupado['qtd'].sum()
                 diferenca_unidades = qtd_total_vendida - pe_geral_unidades
                 percentual_pe = (diferenca_unidades / pe_geral_unidades) * 100 if pe_geral_unidades > 0 else 0
@@ -188,6 +221,10 @@ if uploaded_file:
             # --- MÉTRICAS DE PONTO DE EQUILÍBRIO GERAL ---
             st.markdown("---")
             st.subheader("📊 Análise de Ponto de Equilíbrio Geral")
+            
+            # Mostrar aviso se período foi ajustado
+            if aviso_periodo:
+                st.info(f"📅 Período dos dados: **{periodo_dias} dias** {aviso_periodo}")
             
             col_pe1, col_pe2, col_pe3 = st.columns(3)
             
