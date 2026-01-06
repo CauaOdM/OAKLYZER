@@ -63,6 +63,7 @@ if uploaded_file:
 
             # --- CÁLCULOS ---
             df['faturamento'] = df['qtd'] * df['preco_venda']
+            ticket_medio = df['faturamento'].sum() / df['qtd'].sum() if df['qtd'].sum() > 0 else 0
             
             if 'custo_unitario' in df.columns:
                 df['lucro'] = (df['preco_venda'] - df['custo_unitario']) * df['qtd']
@@ -116,6 +117,21 @@ if uploaded_file:
                 how='left'
             )
 
+            # --- CÁLCULO DE PONTO DE EQUILÍBRIO GERAL (Margem de Contrib) ---
+            # Margem de Contribuição Média Ponderada
+            margem_contrib_media_ponderada = 0
+            if 'custo_unitario' in df_agrupado.columns:
+                df_agrupado['margem_contrib_unit'] = df_agrupado['preco_venda'] - df_agrupado['custo_unitario']
+                # Soma ponderada = (MC Unit × QTD) por produto
+                soma_margin_contrib = (df_agrupado['margem_contrib_unit'] * df_agrupado['qtd']).sum()
+                total_qtd = df_agrupado['qtd'].sum()
+                margem_contrib_media_ponderada = soma_margin_contrib / total_qtd if total_qtd > 0 else 0
+            
+            # Inicializa as variáveis de PE (serão recalculadas após definir custo_fixo na sidebar)
+            pe_geral_unidades = 0
+            percentual_pe = 0
+            diferenca_unidades = 0
+
             # --- CÁLCULO DE PONTO DE EQUILÍBRIO E ROI ---
             if 'custo_unitario' in df_agrupado.columns:
                 # Calcula custo total de cada produto
@@ -140,6 +156,27 @@ if uploaded_file:
             
             st.subheader("Resultado")
             
+            # --- BARRA LATERAL (CONTROLE) ---
+            st.sidebar.header("Painel do Consultor")
+            st.sidebar.subheader("💰 Análise Financeira")
+            custo_fixo = st.sidebar.number_input(
+                "Custo Fixo Total (R$)",
+                value=0.0,
+                min_value=0.0,
+                step=100.0,
+                help="Aluguel, taxas, serviços, contas fixas (SEM custo dos produtos)"
+            )
+            
+            st.sidebar.subheader("👤 Controle de Acesso")
+            modo_pago = st.sidebar.checkbox("🔓 Desbloquear Nomes (Modo Pago)", value=False)
+            
+            # --- RECALCULA PE GERAL COM custo_fixo DEFINIDO ---
+            if margem_contrib_media_ponderada > 0 and custo_fixo > 0:
+                pe_geral_unidades = custo_fixo / margem_contrib_media_ponderada
+                qtd_total_vendida = df_agrupado['qtd'].sum()
+                diferenca_unidades = qtd_total_vendida - pe_geral_unidades
+                percentual_pe = (diferenca_unidades / pe_geral_unidades) * 100 if pe_geral_unidades > 0 else 0
+            
             # Métricas Rápidas 
             c1, c2, c3 = st.columns(3)
             c1.metric("Faturamento Total", f"R$ {df['faturamento'].sum():,.2f}")
@@ -148,11 +185,63 @@ if uploaded_file:
             if 'lucro' in df.columns:
                 c3.metric("Lucro Total", f"R$ {df['lucro'].sum():,.2f}")
 
-            # --- BARRA LATERAL (CONTROLE) ---
-            st.sidebar.header("Painel do Consultor")
-            modo_pago = st.sidebar.checkbox("🔓 Desbloquear Nomes (Modo Pago)", value=False)
+            # --- MÉTRICAS DE PONTO DE EQUILÍBRIO GERAL ---
+            st.markdown("---")
+            st.subheader("📊 Análise de Ponto de Equilíbrio Geral")
             
+            col_pe1, col_pe2, col_pe3 = st.columns(3)
             
+            with col_pe1:
+                st.metric(
+                    "🎯 Ticket Médio",
+                    f"R$ {ticket_medio:,.2f}",
+                    help="Faturamento total ÷ Quantidade vendida"
+                )
+            
+            with col_pe2:
+                if pe_geral_unidades > 0:
+                    st.metric(
+                        "⚖️ PE Geral (Unidades)",
+                        f"{pe_geral_unidades:.0f} un",
+                        help="Quantidade necessária pra cobrir custos fixos"
+                    )
+                else:
+                    st.metric(
+                        "⚖️ PE Geral (Unidades)",
+                        "—",
+                        help="Informe custo fixo para calcular"
+                    )
+            
+            with col_pe3:
+                if custo_fixo > 0 and margem_contrib_media_ponderada > 0:
+                    st.metric(
+                        "📈 Distância do PE",
+                        f"{percentual_pe:+.1f}%",
+                        delta=f"{diferenca_unidades:+.0f} un",
+                        help="+ = acima (seguro) | - = abaixo (risco)"
+                    )
+                else:
+                    st.metric(
+                        "📈 Distância do PE",
+                        "—",
+                        help="Informe custo fixo para calcular"
+                    )
+            
+            # Alerta inteligente
+            if custo_fixo > 0 and margem_contrib_media_ponderada > 0:
+                if percentual_pe < 0:
+                    st.error(f"🚨 Você está {abs(percentual_pe):.1f}% ABAIXO do PE! Faturamento insuficiente.")
+                elif percentual_pe < 20:
+                    st.warning(f"⚠️ Você está apenas {percentual_pe:.1f}% acima do PE. Margem apertada, cuidado!")
+                else:
+                    st.success(f"✅ Você está {percentual_pe:.1f}% acima do PE. Situação confortável!")
+            else:
+                if custo_fixo == 0:
+                    st.info("💡 Preencha o custo fixo na barra lateral para calcular o ponto de equilíbrio.")
+                if 'custo_unitario' not in df.columns:
+                    st.info("💡 Adicione custo unitário na planilha para análise completa.")
+
+            # --- MÁSCARA DE NOMES ---
             if not modo_pago:
                 st.warning("🔒 MODO DEMONSTRAÇÃO: Nomes dos produtos estão ocultos.")
                 # Ordena por faturamento
@@ -497,6 +586,11 @@ if uploaded_file:
             total_fat = _fmt_brl(df['faturamento'].sum())
             total_qtd = int(df['qtd'].sum())
             total_lucro = _fmt_brl(df['lucro'].sum()) if 'lucro' in df.columns else "N/A"
+            
+            # --- PREPARAR DADOS DO PE GERAL PARA HTML ---
+            ticket_medio_display = f"R$ {ticket_medio:,.2f}"
+            pe_geral_display = f"{pe_geral_unidades:.0f} un" if pe_geral_unidades > 0 else "—"
+            distancia_pe_display = f"{percentual_pe:+.1f}%" if pe_geral_unidades > 0 else "—"
 
             html_report = f"""
 <!DOCTYPE html>
@@ -539,6 +633,15 @@ if uploaded_file:
             <div class=\"card\"><strong>Faturamento Total</strong><br><span>{total_fat}</span></div>
             <div class=\"card\"><strong>Vendas Totais</strong><br><span>{total_qtd}</span></div>
             <div class=\"card\"><strong>Lucro Total</strong><br><span>{total_lucro}</span></div>
+        </div>
+    </div>
+
+    <div class=\"panel\">
+        <h2>📊 Análise de Ponto de Equilíbrio Geral</h2>
+        <div class=\"metrics\">
+            <div class=\"card\"><strong>Ticket Médio</strong><br><span>{ticket_medio_display}</span></div>
+            <div class=\"card\"><strong>PE Geral (Unidades)</strong><br><span>{pe_geral_display}</span></div>
+            <div class=\"card\"><strong>Distância do PE</strong><br><span>{distancia_pe_display}</span></div>
         </div>
     </div>
 
