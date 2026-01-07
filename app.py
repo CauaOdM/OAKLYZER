@@ -634,7 +634,7 @@ if uploaded_file:
 <html lang=\"pt-BR\">
 <head>
     <meta charset=\"UTF-8\" />
-    <title>Relatório OAKLYZER</title>
+    <title>Relatório OAK</title>
     <style>
         :root {{
             --bg: #0f172a;
@@ -661,7 +661,7 @@ if uploaded_file:
     </style>
 </head>
 <body>
-    <h1>Relatório OAKLYZER</h1>
+    <h1>Relatório OAK</h1>
     <div class=\"pill\">Gerado em {agora}</div>
 
     <div class=\"panel\">
@@ -674,7 +674,7 @@ if uploaded_file:
     </div>
 
     <div class=\"panel\">
-        <h2>📊 Análise de Ponto de Equilíbrio Geral</h2>
+        <h2>Análise de Ponto de Equilíbrio Geral</h2>
         <div class=\"metrics\">
             <div class=\"card\"><strong>Ticket Médio</strong><br><span>{ticket_medio_display}</span></div>
             <div class=\"card\"><strong>PE Geral (Unidades)</strong><br><span>{pe_geral_display}</span></div>
@@ -752,7 +752,7 @@ if uploaded_file:
             st.download_button(
                 label="⬇️ Exportar relatório HTML (somente visualização)",
                 data=html_report,
-                file_name="relatorio_oaklyzer.html",
+                file_name="Diagnóstico_OAK.html",
                 mime="text/html"
             )
 
